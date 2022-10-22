@@ -551,7 +551,7 @@ void print_input_lines(const char *heading)
  * @param <posmap> pointer to the position map, which maps each position in <ascii> to a position in <s>
  * @returns the number of invisible characters in <s>
  */
-static size_t count_invisible_chars(const uint32_t *s, size_t *num_esc, char **ascii, size_t **posmap)
+size_t count_invisible_chars(const uint32_t *s, size_t *num_esc, char **ascii, size_t **posmap)
 {
     size_t invis = 0;  /* counts invisible column positions */
     *num_esc = 0;      /* counts the number of escape sequences found */

@@ -75,6 +75,8 @@ void print_input_lines(const char *heading);
 
 void analyze_line_ascii(input_t *input_ptr, line_t *line);
 
+size_t count_invisible_chars(const uint32_t *s, size_t *num_esc, char **ascii, size_t **posmap);
+
 int array_contains(char **array, const size_t array_len, const char *s);
 
 /**

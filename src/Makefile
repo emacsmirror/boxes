@@ -108,7 +108,7 @@ lex.yy.c lex.yy.h: lexer.l | check_dir
 	$(LEX) --header-file=lex.yy.h $<
 
 boxes.o:     boxes.c boxes.h cmdline.h discovery.h generate.h input.h list.h remove.h tools.h unicode.h config.h | check_dir
-bxstring.o:  bxstring.c bxstring.h config.h | check_dir
+bxstring.o:  bxstring.c bxstring.h tools.h unicode.h config.h | check_dir
 cmdline.o:   cmdline.c cmdline.h boxes.h tools.h config.h | check_dir
 discovery.o: discovery.c discovery.h boxes.h tools.h config.h | check_dir
 generate.o:  generate.c generate.h boxes.h shape.h tools.h unicode.h config.h | check_dir

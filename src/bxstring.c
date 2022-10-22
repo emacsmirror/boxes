@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-
+#include <string.h>
 #include "bxstring.h"
 #include "tools.h"
 #include "unicode.h"
@@ -50,10 +50,11 @@ bxstr_t *from_ascii(char *pAscii)
     result->num_chars_invisible = count_invisible_chars(result->memory, &num_esc, &ascii_copy, &(map));
     BFREE(ascii_copy);
 
-    result->num_bytes = strlen(pAscii);
-    result->num_chars = result->num_bytes;
+    result->num_chars = strlen(pAscii);
+    result->num_bytes = result->num_chars + 1;
 
     /* TODO convert map to uint32_t **visible_char */
+    return result;
 }
 
 

@@ -24,6 +24,7 @@
 #include <cmocka.h>
 
 #include "global_mock.h"
+#include "bxstring_test.h"
 #include "cmdline_test.h"
 #include "tools_test.h"
 #include "regulex_test.h"
@@ -94,10 +95,15 @@ int main(void)
         cmocka_unit_test(test_strisno_false)
     };
 
+    const struct CMUnitTest bxstring_tests[] = {
+        cmocka_unit_test_setup(test_ascii_simple, beforeTest)
+    };
+
     int num_failed = 0;
     num_failed += cmocka_run_group_tests(cmdline_tests, NULL, NULL);
     num_failed += cmocka_run_group_tests(regulex_tests, NULL, NULL);
     num_failed += cmocka_run_group_tests(tools_tests, NULL, NULL);
+    num_failed += cmocka_run_group_tests(bxstring_tests, NULL, NULL);
 
     teardown();
     return num_failed;
