@@ -92,7 +92,9 @@ int main(void)
         cmocka_unit_test(test_strisyes_true),
         cmocka_unit_test(test_strisyes_false),
         cmocka_unit_test(test_strisno_true),
-        cmocka_unit_test(test_strisno_false)
+        cmocka_unit_test(test_strisno_false),
+        cmocka_unit_test(test_my_strrspn_edge),
+        cmocka_unit_test(test_my_strrspn)
     };
 
     const struct CMUnitTest bxstring_tests[] = {

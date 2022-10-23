@@ -22,9 +22,9 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "boxes.h"
 #include "bxstring.h"
 #include "global_mock.h"
+#include "utest_tools.h"
 #include "bxstring_test.h"
 
 
@@ -40,9 +40,11 @@ void test_ascii_simple(void **state)
     assert_int_equal(0, (int) actual->indent);
     assert_int_equal(4, (int) actual->num_bytes);
     assert_int_equal(3, (int) actual->num_chars);
+    assert_int_equal(3, (int) actual->num_chars_visible);
     assert_int_equal(0, (int) actual->num_chars_invisible);
     assert_int_equal(0, (int) actual->trailing);
-    /* TODO first_char, visible_char */
+    assert_array_equal((size_t[]){0x00, 0x01, 0x02}, actual->first_char, 3);
+    assert_array_equal((size_t[]){0x00, 0x01, 0x02}, actual->visible_char, 3);
     assert_int_equal(0, actual->offset_start);
     assert_int_equal(0, actual->offset_end);
 }

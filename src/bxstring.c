@@ -52,8 +52,18 @@ bxstr_t *from_ascii(char *pAscii)
 
     result->num_chars = strlen(pAscii);
     result->num_bytes = result->num_chars + 1;
+    result->num_chars_visible = result->num_chars - result->num_chars_invisible;
 
-    /* TODO convert map to uint32_t **visible_char */
+    result->indent = strspn(pAscii, " ");
+    result->trailing = my_strrspn(pAscii, " ");
+
+    result->first_char = malloc(result->num_chars_visible * sizeof(size_t));
+    result->visible_char = malloc(result->num_chars_visible * sizeof(size_t));
+    for(size_t i = 0; i < result->num_chars_visible; i++) {
+        result->first_char[i] = i;
+        result->visible_char[i] = i;
+    }
+
     return result;
 }
 

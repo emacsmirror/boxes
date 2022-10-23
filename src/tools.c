@@ -429,6 +429,26 @@ char *my_strnrstr(const char *s1, const char *s2, const size_t s2_len, int skip)
 
 
 
+size_t my_strrspn(const char *s, const char *accept)
+{
+    if (!s || *s == '\0') {
+        return 0;
+    }
+    if (!accept || *accept == '\0') {
+        return 0;
+    }
+
+    for(int i = strlen(s) - 1; i >= 0; i--) {
+        size_t idx = (size_t) i;
+        if (strchr(accept, s[idx]) == NULL) {
+            return strlen(s) - (idx + 1);
+        }
+    }
+    return strlen(s);
+}
+
+
+
 char *tabbify_indent(const size_t lineno, char *indentspc, const size_t indentspc_len)
 /*
  *  Checks if tab expansion mode is "keep", and if so, calculates a new

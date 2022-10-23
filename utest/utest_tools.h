@@ -14,21 +14,20 @@
  */
 
 /*
- * Unit tests of the 'tools' module
+ * Helper functions for all the unit tests.
  */
 
-#ifndef TOOLS_TEST_H
-#define TOOLS_TEST_H
+#ifndef UTEST_TOOLS_H
+#define UTEST_TOOLS_H
 
 
-void test_strisyes_true(void **state);
-void test_strisyes_false(void **state);
-
-void test_strisno_true(void **state);
-void test_strisno_false(void **state);
-
-void test_my_strrspn_edge(void **state);
-void test_my_strrspn(void **state);
+/**
+ * Assert that the two given arrays have the same contents.
+ * @param <p_expected> the expected array
+ * @param <p_actual> the actual array
+ * @param <p_len_expected> number of elements in `p_expected`
+ */
+void assert_array_equal(size_t *p_expected, size_t *p_actual, size_t p_len_expected);
 
 
 #endif

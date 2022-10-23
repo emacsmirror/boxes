@@ -24,17 +24,18 @@
 
 
 typedef struct {
-    uint32_t  *memory;        /* Immutable. Pointer to the original memory area for the string */
-    char      *ascii;         /* Immutable. ASCII version of the original string, tabs expanded, invisible characters removed, multi-byte chars replaced with one or more 'x'. CHECK remove this eventually */
-    size_t     indent;        /* Immutable. Number of spaces at the beginning of the original string */
-    size_t     num_bytes;     /* Immutable. Total number of bytes occupied in memory by the original string */
-    size_t     num_chars;     /* Immutable. Number of characters in the original string (visible + invisible) */
-    size_t     num_chars_invisible; /* Immutable. Number of invisible characters in the original string */
-    size_t     trailing;      /* Immutable. Number of trailing spaces in the original string */
-    uint32_t **first_char;    /* Immutable. Array of pointers to the first actual character (possibly invisible) of each visible character */
-    uint32_t **visible_char;  /* Immutable. Array of pointers to the visible characters themselves */
-    int        offset_start;  /* Number of visible characters to cut from the beginning of the string. Can be negative, in which case spaces will be prepended. */
-    int        offset_end;    /* Number of visible characters to cut from the end of the string. Can be negative, in which case spaces will be appended. */
+    uint32_t *memory;       /* Immutable. Pointer to the original memory area for the string */
+    char     *ascii;        /* Immutable. ASCII version of the original string, tabs expanded, invisible characters removed, multi-byte chars replaced with one or more 'x'. CHECK remove this eventually */
+    size_t    indent;       /* Immutable. Number of spaces at the beginning of the original string */
+    size_t    num_bytes;    /* Immutable. Total number of bytes occupied in memory by the original string */
+    size_t    num_chars;    /* Immutable. Number of characters in the original string (visible + invisible) */
+    size_t    num_chars_visible;   /* Immutable. Number of visible characters in the original string */
+    size_t    num_chars_invisible; /* Immutable. Number of invisible characters in the original string */
+    size_t    trailing;     /* Immutable. Number of trailing spaces in the original string */
+    size_t   *first_char;   /* Immutable. Array of index values into `memory` of the first actual character (possibly invisible) of each visible character */
+    size_t   *visible_char; /* Immutable. Array of index values into `memory` of the visible characters themselves */
+    int       offset_start; /* Number of visible characters to cut from the beginning of the string. Can be negative, in which case spaces will be prepended. */
+    int       offset_end;   /* Number of visible characters to cut from the end of the string. Can be negative, in which case spaces will be appended. */
 } bxstr_t;
 
 

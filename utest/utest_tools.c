@@ -14,23 +14,36 @@
  */
 
 /*
- * Unit tests of the 'tools' module
+ * Helper functions for all the unit tests.
  */
 
-#ifndef TOOLS_TEST_H
-#define TOOLS_TEST_H
+#include "config.h"
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <cmocka.h>
+#include "utest_tools.h"
 
 
-void test_strisyes_true(void **state);
-void test_strisyes_false(void **state);
+void assert_array_equal(size_t *p_expected, size_t *p_actual, size_t p_len_expected)
+{
+    if (p_expected == NULL && p_actual == NULL) {
+        assert_int_equal(0, p_len_expected);
+        return;
+    }
+    if (p_expected == NULL) {
+        assert_null(p_actual);
+        assert_int_equal(0, p_len_expected);
+    }
+    if (p_actual == NULL) {
+        assert_null(p_expected);
+        assert_int_equal(0, p_len_expected);
+    }
 
-void test_strisno_true(void **state);
-void test_strisno_false(void **state);
+    for (size_t i = 0; i < p_len_expected; i++) {
+        assert_int_equal((int) p_expected[i], (int) p_actual[i]);
+    }
+}
 
-void test_my_strrspn_edge(void **state);
-void test_my_strrspn(void **state);
-
-
-#endif
 
 /*EOF*/                                          /* vim: set cindent sw=4: */

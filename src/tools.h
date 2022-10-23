@@ -52,6 +52,15 @@ void btrim32(uint32_t *text, size_t *len);
 char *my_strnrstr(const char *s1, const char *s2, const size_t s2_len,
                   int skip);
 
+/**
+ * Calculates the length (in bytes) of the segment at the end of `s` which consists entirely of bytes in `accept`.
+ * This is like `strspn()`, but from the end of the string.
+ * @param <s> the string to search
+ * @param <accept> acceptable characters that form the trailing segment
+ * @return the number of bytes found as described above
+ */
+size_t my_strrspn(const char *s, const char *accept);
+
 int strisyes(const char *s);
 
 int strisno(const char *s);

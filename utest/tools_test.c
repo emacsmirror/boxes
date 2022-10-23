@@ -96,4 +96,29 @@ void test_strisno_false(void **state)
 }
 
 
+void test_my_strrspn_edge(void **state)
+{
+    (void) state;  /* unused */
+
+    assert_int_equal(0, (int) my_strrspn(NULL, "abc"));
+    assert_int_equal(0, (int) my_strrspn("", "abc"));
+    assert_int_equal(0, (int) my_strrspn("abc", NULL));
+    assert_int_equal(0, (int) my_strrspn("abc", ""));
+    assert_int_equal(0, (int) my_strrspn(NULL, NULL));
+}
+
+
+void test_my_strrspn(void **state)
+{
+    (void) state;  /* unused */
+
+    assert_int_equal(2, (int) my_strrspn("foo", "o"));
+    assert_int_equal(0, (int) my_strrspn("foo", "ABC"));
+    assert_int_equal(3, (int) my_strrspn("foo", "foobar"));
+    assert_int_equal(1, (int) my_strrspn("foo ", " "));
+    assert_int_equal(1, (int) my_strrspn("a", "a"));
+    assert_int_equal(0, (int) my_strrspn("a", "A"));
+    assert_int_equal(2, (int) my_strrspn("axxaa", "a"));
+}
+
 /*EOF*/                                          /* vim: set cindent sw=4: */
