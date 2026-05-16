@@ -30,6 +30,8 @@ BX_YACC ?= bison
 
 PCRE2_VERSION          = 10.40
 PCRE2_DIR              = vendor/pcre2-$(PCRE2_VERSION)
+WIN32_PCRE2_INCLUDE    ?= ../$(PCRE2_DIR)/src
+WIN32_PCRE2_LDFLAGS    ?= -L../$(PCRE2_DIR)/.libs
 LIBUNISTRING_VERSION   = 1.0
 LIBUNISTRING_DIR       = vendor/libunistring-$(LIBUNISTRING_VERSION)
 LIBNCURSES_VERSION     = 6.4
@@ -37,10 +39,16 @@ LIBNCURSES_DIR         = vendor/ncurses-$(LIBNCURSES_VERSION)
 LIBNCURSES_WIN_INCLUDE = /c/MinGW/include/ncurses
 WIN_FLEX_BISON_VERSION = 2.5.24
 WIN_FLEX_BISON_DIR     = vendor/flex_bison_$(WIN_FLEX_BISON_VERSION)
+WIN32_LEX              ?= ../$(WIN_FLEX_BISON_DIR)/win_flex.exe
+WIN32_YACC             ?= ../$(WIN_FLEX_BISON_DIR)/win_bison.exe
 WIN_CMOCKA_VERSION     = 1.1.0
 WIN_CMOCKA_DIR         = vendor/cmocka-$(WIN_CMOCKA_VERSION)
+WIN32_CMOCKA_DLL       ?= $(WIN_CMOCKA_DIR)/bin/cmocka.dll
+WIN32_CMOCKA_INCLUDE   ?= ../$(WIN_CMOCKA_DIR)/include
+WIN32_CMOCKA_LDFLAGS   ?= -L../$(WIN_CMOCKA_DIR)/lib
+WIN32_CI_PREFIX        ?= /mingw32
 
-.PHONY: clean cleanall build cov win32 debug win32.debug win32.pcre infomsg replaceinfos test covtest \
+.PHONY: clean cleanall build cov win32 win32.ci debug win32.debug win32.pcre infomsg replaceinfos test covtest \
         package win32.package package_common utest win32.utest static
 
 
@@ -78,13 +86,13 @@ build cov debug: infomsg replaceinfos
 	$(MAKE) -C src BOXES_PLATFORM=unix LEX=$(BX_LEX) YACC=$(BX_YACC) $@
 
 win32: infomsg replaceinfos
-	$(MAKE) -C src BOXES_PLATFORM=win32 C_INCLUDE_PATH=../$(PCRE2_DIR)/src LDFLAGS=-L../$(PCRE2_DIR)/.libs \
-	    LEX=../$(WIN_FLEX_BISON_DIR)/win_flex.exe YACC=../$(WIN_FLEX_BISON_DIR)/win_bison.exe \
+	$(MAKE) -C src BOXES_PLATFORM=win32 C_INCLUDE_PATH=$(WIN32_PCRE2_INCLUDE) LDFLAGS=$(WIN32_PCRE2_LDFLAGS) \
+	    LEX=$(WIN32_LEX) YACC=$(WIN32_YACC) \
 	    LIBNCURSES_WIN_INCLUDE=$(LIBNCURSES_WIN_INCLUDE) build
 
 win32.debug: infomsg replaceinfos
-	$(MAKE) -C src BOXES_PLATFORM=win32 C_INCLUDE_PATH=../$(PCRE2_DIR)/src LDFLAGS=-L../$(PCRE2_DIR)/.libs \
-	    LEX=../$(WIN_FLEX_BISON_DIR)/win_flex.exe YACC=../$(WIN_FLEX_BISON_DIR)/win_bison.exe \
+	$(MAKE) -C src BOXES_PLATFORM=win32 C_INCLUDE_PATH=$(WIN32_PCRE2_INCLUDE) LDFLAGS=$(WIN32_PCRE2_LDFLAGS) \
+	    LEX=$(WIN32_LEX) YACC=$(WIN32_YACC) \
 	    LIBNCURSES_WIN_INCLUDE=$(LIBNCURSES_WIN_INCLUDE) debug
 
 win32.prereq: $(PCRE2_DIR)/.libs/libpcre2-32.a vendor/win_flex_bison-$(WIN_FLEX_BISON_VERSION).zip \
@@ -230,9 +238,25 @@ utest:
 	$(MAKE) -C utest BOXES_PLATFORM=unix utest
 
 win32.utest: $(OUT_DIR)
-	cp $(WIN_CMOCKA_DIR)/bin/cmocka.dll $(OUT_DIR)/
-	$(MAKE) -C utest BOXES_PLATFORM=win32 C_INCLUDE_PATH=../$(PCRE2_DIR)/src:../$(WIN_CMOCKA_DIR)/include \
-	    LDFLAGS_ADDTL="-L../$(PCRE2_DIR)/.libs -L../$(WIN_CMOCKA_DIR)/lib" utest
+	cp $(WIN32_CMOCKA_DLL) $(OUT_DIR)/
+	$(MAKE) -C utest BOXES_PLATFORM=win32 C_INCLUDE_PATH=$(WIN32_PCRE2_INCLUDE):$(WIN32_CMOCKA_INCLUDE) \
+	    LDFLAGS_ADDTL="$(WIN32_PCRE2_LDFLAGS) $(WIN32_CMOCKA_LDFLAGS)" utest
+
+# Mirror the Windows GitHub Actions sequence so it can be exercised locally from MSYS2.
+win32.ci:
+	$(MAKE) clean
+	$(MAKE) win32 \
+	    WIN32_PCRE2_INCLUDE=$(WIN32_CI_PREFIX)/include \
+	    WIN32_PCRE2_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib \
+	    WIN32_LEX=flex WIN32_YACC=bison
+	$(MAKE) win32.utest \
+	    WIN32_PCRE2_INCLUDE=$(WIN32_CI_PREFIX)/include \
+	    WIN32_PCRE2_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib \
+	    WIN32_CMOCKA_DLL=$(WIN32_CI_PREFIX)/bin/libcmocka.dll \
+	    WIN32_CMOCKA_INCLUDE=$(WIN32_CI_PREFIX)/include \
+	    WIN32_CMOCKA_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib
+	TERM=$${TERM:-xterm-color} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test-sunny
+	TERM=$${TERM:-xterm-color} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test
 
 test-sunny:
 	cd test; ./test-sunny-days-all.sh

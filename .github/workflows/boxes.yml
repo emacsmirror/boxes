@@ -24,7 +24,7 @@ jobs:
     build-linux:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: add-packages
               run: |
@@ -58,7 +58,7 @@ jobs:
           BX_LEX: /usr/local/opt/flex/bin/flex
           BX_YACC: /usr/local/opt/bison/bin/bison
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             # We need to use GNU grep, sed, and xargs on macOS
             - name: add-packages
@@ -89,8 +89,67 @@ jobs:
                   flag-name: run-macos
                   parallel: true
 
+    build-windows:
+        runs-on: windows-2022
+        env:
+            LANG: en_US.UTF-8
+            TERM: xterm-color
+            WIN32_PCRE2_INCLUDE: /mingw32/include
+            WIN32_PCRE2_LDFLAGS: -L/mingw32/lib
+            WIN32_LEX: flex
+            WIN32_YACC: bison
+            WIN32_CMOCKA_DLL: /mingw32/bin/libcmocka.dll
+            WIN32_CMOCKA_INCLUDE: /mingw32/include
+            WIN32_CMOCKA_LDFLAGS: -L/mingw32/lib
+        defaults:
+            run:
+                shell: msys2 {0}
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: add-packages
+              uses: msys2/setup-msys2@v2
+              with:
+                  msystem: MINGW32
+                  update: true
+                  install: >-
+                      bison
+                      diffutils
+                      dos2unix
+                      flex
+                      git
+                      make
+                      mingw-w64-i686-cmocka
+                      mingw-w64-i686-gcc
+                      mingw-w64-i686-libiconv
+                      mingw-w64-i686-libunistring
+                      mingw-w64-i686-pcre2
+                      unzip
+                      vim
+                      zip
+
+            - name: Build boxes.exe
+              run: make win32
+
+            - name: Run white-box tests
+              run: make win32.utest
+
+            - name: Run sunny-day tests
+              run: make test-sunny
+
+            - name: Run black-box tests
+              run: make test
+
+            - name: Save boxes.exe artifact
+              if: ${{ always() && hashFiles('out/boxes.exe') != '' }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: boxes.exe
+                  path: out/boxes.exe
+                  retention-days: 30
+
     finish:
-      needs: [build-linux, build-macos]
+      needs: [build-linux, build-macos, build-windows]
       if: ${{ always() }}
       runs-on: ubuntu-latest
       steps:
