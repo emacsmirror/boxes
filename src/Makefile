@@ -105,6 +105,10 @@ flags_:
 parser.c parser.h: parser.y lex.yy.h | check_dir
 	$(YACC) -Wall --verbose --defines=parser.h -o parser.c $<
 
+# Bison generates `yynerrs` bookkeeping that newer MinGW GCC warns about, even though
+# the variable lives entirely in generated code.
+parser.o: CFLAGS += -Wno-unused-but-set-variable
+
 lex.yy.c lex.yy.h: lexer.l | check_dir
 	$(LEX) --header-file=lex.yy.h $<
 

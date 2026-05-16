@@ -325,14 +325,14 @@ uint32_t *u32_strnrstr(const uint32_t *haystack, const uint32_t *needle, const s
         return NULL;
     }
 
-    uint32_t *p = u32_strrchr(haystack, needle[0]);
+    const uint32_t *p = u32_strrchr(haystack, needle[0]);
     if (!p) {
         return NULL;
     }
 
     while (p >= haystack) {
         if (u32_strncmp(p, needle, needle_len) == 0) {
-            return p;
+            return (uint32_t *) p;
         }
         --p;
     }
@@ -344,7 +344,7 @@ uint32_t *u32_strnrstr(const uint32_t *haystack, const uint32_t *needle, const s
 
 void u32_insert_space_at(uint32_t **s, const size_t idx, const size_t n)
 {
-    if (s == NULL || n == 0) {
+    if (s == NULL || *s == NULL || n == 0) {
         return;
     }
 
@@ -354,8 +354,14 @@ void u32_insert_space_at(uint32_t **s, const size_t idx, const size_t n)
         x = len;
     }
 
-    *s = (uint32_t *) realloc(*s, (len + 1 + n) * sizeof(uint32_t));
-    u32_move(*s + x + n, *s + x, len - x);
+    uint32_t *tmp = (uint32_t *) realloc(*s, (len + 1 + n) * sizeof(uint32_t));
+    if (tmp == NULL) {
+        perror(PROJECT);
+        return;
+    }
+
+    *s = tmp;
+    u32_move(*s + x + n, *s + x, len - x + 1);
     u32_set(*s + x, char_space, n);
 }
 

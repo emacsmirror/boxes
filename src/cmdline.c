@@ -748,7 +748,13 @@ opt_t *process_commandline(int argc, char *argv[])
         return result;
     }
 
-    optind = 1;   /* ensure that getopt() will process all arguments, even in unit test situations */
+    /* Reinitialize getopt() for repeated invocations, as in the unit tests.
+     * Some MinGW getopt_long() variants require optind = 0 for a full reset. */
+    #ifdef __MINGW32__
+        optind = 0;
+    #else
+        optind = 1;
+    #endif
     int option_index = 0;
     const struct option long_options[] = {
         { "align",         required_argument, NULL, 'a' },

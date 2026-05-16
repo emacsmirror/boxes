@@ -194,10 +194,10 @@ void test_ansi_unicode_empty(void **state)
     assert_int_equal(0, (int) actual->num_chars_visible);
     assert_int_equal(0, (int) actual->num_chars_invisible);
     assert_int_equal(0, (int) actual->trailing);
-    int expected_firstchar_idx[] = {};
-    assert_array_equal(expected_firstchar_idx, actual->first_char, 0);
-    int expected_vischar_idx[] = {};
-    assert_array_equal(expected_vischar_idx, actual->visible_char, 0);
+    assert_non_null(actual->first_char);
+    assert_non_null(actual->visible_char);
+    assert_int_equal(0, (int) actual->first_char[0]);
+    assert_int_equal(0, (int) actual->visible_char[0]);
 
     BFREE(ustr32);
     bxs_free(actual);
@@ -223,9 +223,9 @@ void test_ansi_unicode_blanks(void **state)
     assert_int_equal(0, (int) actual->num_chars_invisible);
     assert_int_equal(0, (int) actual->trailing);
     int expected_firstchar_idx[] = {0, 1, 2, 3};
-    assert_array_equal(expected_firstchar_idx, actual->first_char, 0);
+    assert_array_equal(expected_firstchar_idx, actual->first_char, 4);
     int expected_vischar_idx[] = {0, 1, 2, 3};
-    assert_array_equal(expected_vischar_idx, actual->visible_char, 0);
+    assert_array_equal(expected_vischar_idx, actual->visible_char, 4);
 
     BFREE(ustr32);
     bxs_free(actual);
