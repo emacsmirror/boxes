@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # boxes - Command line filter to draw/remove ASCII boxes around text
-# Copyright (c) 1999-2024 Thomas Jensen and the boxes contributors
+# SPDX-FileCopyrightText: Copyright (c) 1999-2026 Thomas Jensen and the boxes contributors
+# SPDX-License-Identifier: GPL-3.0-only
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License, version 3, as published by the Free Software Foundation.
