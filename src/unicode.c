@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <uniconv.h>
 #include <unictype.h>
@@ -54,6 +55,81 @@ const ucs4_t char_esc = 0x0000001b;
 
 /* ucs4_t character '\0' (zero) */
 const ucs4_t char_nul = 0x00000000;
+
+
+
+#ifdef _WIN32
+static const char *get_locale_from_environment()
+{
+    const char *locale = getenv("LC_ALL");
+    if (locale == NULL || locale[0] == '\0') {
+        locale = getenv("LC_CTYPE");
+    }
+    if (locale == NULL || locale[0] == '\0') {
+        locale = getenv("LANG");
+    }
+    return locale != NULL && locale[0] != '\0' ? locale : NULL;
+}
+
+
+static int is_all_digits(const char *s)
+{
+    if (s == NULL || s[0] == '\0') {
+        return 0;
+    }
+    for (const char *p = s; *p != '\0'; p++) {
+        if (*p < '0' || *p > '9') {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
+static const char *extract_locale_encoding(const char *locale)
+{
+    static char encoding_buffer[32];
+    if (locale == NULL) {
+        return NULL;
+    }
+
+    const char *dot = strrchr(locale, '.');
+    if (dot == NULL || dot[1] == '\0') {
+        return NULL;
+    }
+
+    const char *start = dot + 1;
+    const char *end = strchr(start, '@');
+    size_t len = end == NULL ? strlen(start) : (size_t) (end - start);
+    if (len == 0 || len >= sizeof(encoding_buffer)) {
+        return NULL;
+    }
+
+    memcpy(encoding_buffer, start, len);
+    encoding_buffer[len] = '\0';
+    if (strcasecmp(encoding_buffer, "UTF8") == 0
+            || strcasecmp(encoding_buffer, "UTF-8") == 0
+            || strcasecmp(encoding_buffer, "CP65001") == 0
+            || strcmp(encoding_buffer, "65001") == 0)
+    {
+        return "UTF-8";
+    }
+    if ((encoding_buffer[0] == 'C' || encoding_buffer[0] == 'c')
+            && (encoding_buffer[1] == 'P' || encoding_buffer[1] == 'p')
+            && is_all_digits(encoding_buffer + 2))
+    {
+        encoding_buffer[0] = 'C';
+        encoding_buffer[1] = 'P';
+        return encoding_buffer;
+    }
+    if (is_all_digits(encoding_buffer)) {
+        static char codepage_buffer[32];
+        snprintf(codepage_buffer, sizeof(codepage_buffer), "CP%s", encoding_buffer);
+        return codepage_buffer;
+    }
+    return encoding_buffer;
+}
+#endif
 
 
 
@@ -261,6 +337,22 @@ char *u32_strconv_to_arg(const uint32_t *src, const char *targetEncoding)
         fprintf(stderr, "%s: failed to convert from UTF-32 to '%s': %s\n", PROJECT, targetEncoding, strerror(errno));
     }
     return result;
+}
+
+
+
+const char *get_default_encoding()
+{
+    const char *system_encoding = locale_charset();
+
+    #ifdef _WIN32
+        const char *env_encoding = extract_locale_encoding(get_locale_from_environment());
+        if (env_encoding != NULL) {
+            return check_encoding(env_encoding, system_encoding);
+        }
+    #endif
+
+    return system_encoding;
 }
 
 

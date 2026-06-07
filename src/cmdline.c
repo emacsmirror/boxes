@@ -38,6 +38,7 @@
 #include "logging.h"
 #include "query.h"
 #include "tools.h"
+#include "unicode.h"
 #include "cmdline.h"
 
 
@@ -104,7 +105,7 @@ void usage_long(FILE *st)
     fprintf(st, "      --no-kill-blank   Retain leading/trailing blank lines on removal (like -k false)\n");
     fprintf(st, "  -l, --list            List available box designs w/ samples\n");
     fprintf(st, "  -m, --mend            Mend (repair) box\n");
-    fprintf(st, "  -n, --encoding <enc>  Character encoding of input and output [default: %s]\n", locale_charset());
+    fprintf(st, "  -n, --encoding <enc>  Character encoding of input and output [default: %s]\n", get_default_encoding());
     fprintf(st, "  -p, --padding <fmt>   Padding [default: none]\n");
     fprintf(st, "  -q, --tag-query <qry> Query the list of designs by tag\n");
     fprintf(st, "  -r, --remove          Remove box\n");

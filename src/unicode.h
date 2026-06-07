@@ -196,6 +196,15 @@ char *u32_strconv_to_arg(const uint32_t *src, const char *targetEncoding);
 
 
 /**
+ * Determine the default character encoding for input and output text.
+ * On Windows, this prefers an explicit encoding suffix from `LC_ALL`, `LC_CTYPE`,
+ * or `LANG` when present; otherwise it falls back to the CRT locale.
+ * @return the default encoding name
+ */
+const char *get_default_encoding();
+
+
+/**
  * Check if the given `manual_encoding` can be used to covert anything. This should reveal invalid encoding names that
  * have been specified on the command line. If no `manual_encoding` was specified, or if an invalid encoding is
  * detected, we fall back to the system encoding. No new memory is allocated.

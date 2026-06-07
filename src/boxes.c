@@ -454,15 +454,53 @@ static int check_color_support(int opt_color)
 
 
 
+#ifdef _WIN32
+static const char *get_locale_from_environment()
+{
+    const char *locale = getenv("LC_ALL");
+    if (locale == NULL || locale[0] == '\0') {
+        locale = getenv("LC_CTYPE");
+    }
+    if (locale == NULL || locale[0] == '\0') {
+        locale = getenv("LANG");
+    }
+    return locale != NULL && locale[0] != '\0' ? locale : NULL;
+}
+
+
+static UINT get_console_codepage(const char *charset)
+{
+    if (charset == NULL || charset[0] == '\0') {
+        return CP_ACP;
+    }
+    if (strcmp(charset, "UTF-8") == 0) {
+        return CP_UTF8;
+    }
+    if (strncmp(charset, "CP", 2) == 0) {
+        char *end = NULL;
+        unsigned long codepage = strtoul(charset + 2, &end, 10);
+        if (end != NULL && *end == '\0' && codepage > 0) {
+            return (UINT) codepage;
+        }
+    }
+    return CP_ACP;
+}
+#endif
+
+
 /**
  * Switch from default "C" encoding to system encoding.
  */
 static void activateSystemEncoding()
 {
     #ifdef _WIN32
-        SetConsoleOutputCP(CP_ACP);
-        SetConsoleCP(CP_ACP);  
-        /* If it should one day turn out that this doesn't have the desired effect, try setlocale(LC_ALL, ".UTF8"). */
+        const char *locale = get_locale_from_environment();
+        if (locale == NULL || setlocale(LC_ALL, locale) == NULL) {
+            setlocale(LC_ALL, "");
+        }
+        UINT codepage = get_console_codepage(get_default_encoding());
+        SetConsoleOutputCP(codepage);
+        SetConsoleCP(codepage);
     #else
         setlocale(LC_ALL, "");
     #endif
@@ -509,12 +547,13 @@ int main(int argc, char *argv[])
 
     /* Temporarily set the system encoding, for proper output of --help text etc. */
     activateSystemEncoding();
-    encoding = locale_charset();
+    const char *system_encoding = get_default_encoding();
+    encoding = system_encoding;
 
     handle_command_line(argc, argv);
 
     /* Store system character encoding */
-    encoding = check_encoding(opt.encoding, locale_charset());
+    encoding = check_encoding(opt.encoding, system_encoding);
     log_debug(__FILE__, MAIN, "Character Encoding = %s\n", encoding);
 
     color_output_enabled = check_color_support(opt.color);

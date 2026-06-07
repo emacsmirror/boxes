@@ -242,7 +242,7 @@ win32.utest: $(OUT_DIR)
 	$(MAKE) -C utest BOXES_PLATFORM=win32 C_INCLUDE_PATH=$(WIN32_PCRE2_INCLUDE):$(WIN32_CMOCKA_INCLUDE) \
 	    LDFLAGS_ADDTL="$(WIN32_PCRE2_LDFLAGS) $(WIN32_CMOCKA_LDFLAGS)" utest
 
-# Mirror the Windows GitHub Actions sequence so it can be exercised locally from MSYS2.
+# Mirror the Windows GitHub Actions sequence so it can be exercised locally from MSYS2. TODO clean up
 win32.ci:
 	$(MAKE) clean
 	$(MAKE) win32 \
@@ -255,8 +255,8 @@ win32.ci:
 	    WIN32_CMOCKA_DLL=$(WIN32_CI_PREFIX)/bin/libcmocka.dll \
 	    WIN32_CMOCKA_INCLUDE=$(WIN32_CI_PREFIX)/include \
 	    WIN32_CMOCKA_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib
-	TERM=$${TERM:-xterm-color} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test-sunny
-	TERM=$${TERM:-xterm-color} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test
+	TERM=$${TERM:-xterm-color} LC_CTYPE=$${LC_CTYPE:-$${LANG:-en_US.UTF-8}} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test-sunny
+	TERM=$${TERM:-xterm-color} LC_CTYPE=$${LC_CTYPE:-$${LANG:-en_US.UTF-8}} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test
 
 test-sunny:
 	cd test; ./test-sunny-days-all.sh

@@ -93,6 +93,7 @@ jobs:
         runs-on: windows-2022
         env:
             LANG: en_US.UTF-8
+            LC_CTYPE: en_US.UTF-8
             TERM: xterm-color
             WIN32_PCRE2_INCLUDE: /mingw32/include
             WIN32_PCRE2_LDFLAGS: -L/mingw32/lib
