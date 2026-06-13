@@ -53,10 +53,12 @@ jobs:
                   parallel: true
 
     build-macos:
-        runs-on: macos-13
+        runs-on: macos-26
         env:
-          BX_LEX: /usr/local/opt/flex/bin/flex
-          BX_YACC: /usr/local/opt/bison/bin/bison
+          BX_LEX: /opt/homebrew/opt/flex/bin/flex
+          BX_YACC: /opt/homebrew/opt/bison/bin/bison
+          CFLAGS_ADDTL: -I/opt/homebrew/include
+          LDFLAGS_ADDTL: -L/opt/homebrew/lib
         steps:
             - uses: actions/checkout@v6
 
@@ -64,9 +66,9 @@ jobs:
             - name: add-packages
               run: |
                   brew install flex bison diffutils lcov cmocka grep gnu-sed findutils
-                  echo '/usr/local/opt/grep/libexec/gnubin' >> $GITHUB_PATH
-                  echo '/usr/local/opt/gnu-sed/libexec/gnubin' >> $GITHUB_PATH
-                  echo '/usr/local/opt/findutils/libexec/gnubin' >> $GITHUB_PATH
+                  echo '/opt/homebrew/opt/grep/libexec/gnubin' >> $GITHUB_PATH
+                  echo '/opt/homebrew/opt/gnu-sed/libexec/gnubin' >> $GITHUB_PATH
+                  echo '/opt/homebrew/opt/findutils/libexec/gnubin' >> $GITHUB_PATH
 
             - name: make cov
               run: make cov
