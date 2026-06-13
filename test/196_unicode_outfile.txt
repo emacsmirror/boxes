@@ -1,0 +1,14 @@
+:DESC
+Write output to a file whose UTF-8 file name is passed on the command line.
+
+:ARGS
+-f ../boxes-config -d simple - 196_out_ü.txt
+:ASSERT-OUTPUT-FILE 196_out_ü.txt
+:INPUT
+foo
+:OUTPUT-FILTER
+:EXPECTED
+*******
+* foo *
+*******
+:EOF

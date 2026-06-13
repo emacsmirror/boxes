@@ -45,8 +45,8 @@ typedef struct {
  * User-defined initializations for the lexer.
  *
  * Since this scanner must use REJECT in order to be able to process the string delimiter commands, it cannot
- * dynamically enlarge its input buffer to accomodate larger tokens. Thus, we simply set the buffer size to the
- * input file size plus 10 bytes margin-of-error.
+ * dynamically enlarge its input buffer to accomodate larger tokens. Thus, we set the buffer size to the input file
+ * size plus 10 bytes margin-of-error, with a fallback to the default scanner buffer size.
  *
  * @param yyscanner pointer to the scanner data block
  * @param configfile the path to the config file we are reading
@@ -56,8 +56,9 @@ void inflate_inbuf(void *yyscanner, const bxstr_t *configfile);
 }
 
 %{
+#include <limits.h>
+#include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <unitypes.h>
 
@@ -449,18 +450,21 @@ PFILENAME [^\r\n]+
 
 void inflate_inbuf(void *yyscanner, const bxstr_t *configfile)
 {
-    struct stat sinf;
-
-    char *utf8 = u32_strconv_to_arg(configfile->memory, "UTF-8");
-    if (stat(utf8, &sinf)) {
-        perror (PROJECT);
-        BFREE(utf8);
-        exit (EXIT_FAILURE);
-    }
-    BFREE(utf8);
+    int buffer_size = YY_BUF_SIZE;
     struct yyguts_t *yyg = (struct yyguts_t *) yyscanner;
+
+    /* We already have the file open. This avoids a second path-based stat(), which breaks on Windows MSVCRT. */
+    (void) configfile;
+    if (fseek(yyin, 0L, SEEK_END) == 0) {
+        long file_size = ftell(yyin);
+        if (file_size >= 0 && file_size < INT_MAX - 10) {
+            buffer_size = (int) file_size + 10;
+        }
+        rewind(yyin);
+    }
+
     yy_delete_buffer(YY_CURRENT_BUFFER, yyscanner);
-    yy_switch_to_buffer (yy_create_buffer(yyin, sinf.st_size+10, yyscanner), yyscanner);
+    yy_switch_to_buffer (yy_create_buffer(yyin, buffer_size, yyscanner), yyscanner);
     BEGIN(INITIAL);
 }
 

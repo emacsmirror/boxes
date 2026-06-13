@@ -653,7 +653,7 @@ static int input_output_files(opt_t *result, char *argv[], int optind)
             result->infile = stdin;                          /* use stdin for input */
         }
         else {
-            result->infile = fopen(argv[optind], "r");
+            result->infile = bx_fopen(argv[optind], "r");
             if (result->infile == NULL) {
                 bx_fprintf(stderr, "%s: Can\'t open input file -- %s\n", PROJECT, argv[optind]);
                 return 9;                                    /* can't read infile */
@@ -667,7 +667,7 @@ static int input_output_files(opt_t *result, char *argv[], int optind)
             result->outfile = get_stdout_configured(result); /* use stdout for output */
         }
         else {
-            result->outfile = fopen(argv[optind + 1], "wb");
+            result->outfile = bx_fopen(argv[optind + 1], "wb");
             if (result->outfile == NULL) {
                 perror(PROJECT);
                 if (result->infile != stdin) {

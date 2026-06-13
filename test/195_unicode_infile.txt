@@ -1,0 +1,13 @@
+:DESC
+Read input from a file whose UTF-8 file name is passed on the command line.
+
+:ARGS
+-f ../boxes-config -d simple 195_data/in_ü.txt
+:INPUT
+
+:OUTPUT-FILTER
+:EXPECTED
+*******
+* foo *
+*******
+:EOF

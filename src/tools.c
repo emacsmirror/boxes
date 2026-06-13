@@ -31,6 +31,10 @@
 #include <unistr.h>
 #include <unitypes.h>
 #include <uniwidth.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <wchar.h>
+#endif
 
 #include "boxes.h"
 #include "logging.h"
@@ -52,6 +56,34 @@ static pcre2_code *pattern_ascii_id_strict = NULL;
  * This is necessary for unit testing and CI to work with MacOS.
  */
 bx_fprintf_t bx_fprintf = bx_fprintf_original;
+
+
+#ifdef _WIN32
+static wchar_t *utf8_to_utf16(const char *src)
+{
+    if (src == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, -1, NULL, 0);
+    if (len == 0) {
+        errno = EILSEQ;
+        return NULL;
+    }
+
+    wchar_t *result = (wchar_t *) malloc((size_t) len * sizeof(wchar_t));
+    if (result == NULL) {
+        return NULL;
+    }
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, src, -1, result, len) == 0) {
+        BFREE(result);
+        errno = EILSEQ;
+        return NULL;
+    }
+    return result;
+}
+#endif
 
 
 static pcre2_code *get_pattern_ascii_id(int strict)
@@ -715,7 +747,10 @@ void set_bx_fprintf(bx_fprintf_t bx_fprintf_function) {
 
 FILE *bx_fopens(bxstr_t *pathname, char *mode)
 {
-    return bx_fopen(to_utf8(pathname->memory), mode);
+    char *pathname_utf8 = pathname == NULL ? NULL : to_utf8(pathname->memory);
+    FILE *result = bx_fopen(pathname_utf8, mode);
+    BFREE(pathname_utf8);
+    return result;
 }
 
 
@@ -724,11 +759,25 @@ FILE *bx_fopen(char *pathname, char *mode)
 {
     /*
      * On Linux/UNIX and OS X (Mac), one can access files with non-ASCII file names by passing them to fopen() as UTF-8.
-     * On Windows, a different function must be called. (Info: https://stackoverflow.com/a/35065142/1005481)
-     * On newer Windows, we're good:
-     * https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/setlocale-wsetlocale#utf-8-support
+     * On Windows with MSVCRT, file APIs still need UTF-16 pathnames.
      */
-    FILE *f = fopen(pathname, mode);
+    if (pathname == NULL || mode == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    #ifdef _WIN32
+        wchar_t *wpathname = utf8_to_utf16(pathname);
+        wchar_t *wmode = utf8_to_utf16(mode);
+        FILE *f = NULL;
+        if (wpathname != NULL && wmode != NULL) {
+            f = _wfopen(wpathname, wmode);
+        }
+        BFREE(wpathname);
+        BFREE(wmode);
+    #else
+        FILE *f = fopen(pathname, mode);
+    #endif
     return f;
 }
 

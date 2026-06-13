@@ -236,6 +236,10 @@ function arrange_test_fixtures()
     if [ $(grep -c "^:EXPECTED discard-stderr" ${opt_testCase}) -eq 1 ]; then
         discardStderr=true
     fi
+    if [ $(grep -c "^:ASSERT-OUTPUT-FILE " "${opt_testCase}") -eq 1 ]; then
+        assertOutputFile=$(grep "^:ASSERT-OUTPUT-FILE " "${opt_testCase}" | sed -e 's/^:ASSERT-OUTPUT-FILE //')
+        rm -f "${assertOutputFile}"
+    fi
 
     cat "${opt_testCase}" | sed -n '/^:INPUT/,/^:OUTPUT-FILTER/p;' | sed '1d;$d' | tr -d '\r' > "${testInputFile}"
     cat "${opt_testCase}" | sed -n '/^:OUTPUT-FILTER/,/^:EXPECTED\b.*$/p;' | sed '1d;$d' | tr -d '\r' > "${testFilterFile}"
@@ -270,7 +274,20 @@ function run_boxes()
 
 function assert_outcome()
 {
-    tr -d '\r' < "${testOutputFile}" | sed -E -f "${testFilterFile}" | diff - "${testExpectationFile}"
+    local actualOutputForComparison=${testOutputFile}
+    if [ -n "${assertOutputFile}" ]; then
+        if [ -s "${testOutputFile}" ]; then
+            >&2 echo "Error in test case: ${opt_testCase} (stdout was not empty while asserting output file ${assertOutputFile})"
+            exit 5
+        fi
+        actualOutputForComparison=${assertOutputFile}
+    fi
+    if [ ! -f "${actualOutputForComparison}" ]; then
+        >&2 echo "Error in test case: ${opt_testCase} (output file '${actualOutputForComparison}' not found)"
+        exit 5
+    fi
+
+    tr -d '\r' < "${actualOutputForComparison}" | sed -E -f "${testFilterFile}" | diff - "${testExpectationFile}"
     if [ $? -ne 0 ]; then
         >&2 echo "Error in test case: ${opt_testCase} (top: actual; bottom: expected)"
         exit 5
@@ -326,6 +343,7 @@ declare -r testOutputFile=${opt_testCase/%.txt/.out.tmp}
 declare -r testErrorFile=${opt_testCase/%.txt/.err.tmp}
 declare -r boxesArgs=$(sed -n '/^:ARGS/,+1p' < "${opt_testCase}" | grep -v ^:INPUT | sed '1d' | tr -d '\r')
 declare discardStderr=false
+declare assertOutputFile=""
 
 arrange_environment
 arrange_test_fixtures
@@ -343,6 +361,9 @@ rm "${testFilterFile}"
 rm "${testExpectationFile}"
 rm "${testOutputFile}"
 rm -f "${testErrorFile}"
+if [ -n "${assertOutputFile}" ]; then
+    rm -f "${assertOutputFile}"
+fi
 
 echo "    OK"
 exit 0

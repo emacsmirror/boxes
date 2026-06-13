@@ -73,7 +73,7 @@ boxes.static: $(ALL_OBJ) | check_dir
 	if [ "$(STRIP)" = "true" ] ; then strip $(BOXES_EXECUTABLE_NAME) ; fi
 
 boxes.exe: $(ALL_OBJ) | check_dir
-	$(CC) $(LDFLAGS) $^ -o $@ -lkernel32 -l:libunistring.a -l:libpcre2-32.a -l:libiconv.a
+	$(CC) $(LDFLAGS) $^ -o $@ -lkernel32 -lshell32 -l:libunistring.a -l:libpcre2-32.a -l:libiconv.a
 	if [ "$(STRIP)" = "true" ] ; then strip $@ ; fi
 
 

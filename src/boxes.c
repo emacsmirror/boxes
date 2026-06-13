@@ -19,6 +19,7 @@
 #ifndef __MINGW32__
 #include <ncurses.h>
 #endif
+#include <errno.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +28,7 @@
 #include <unistd.h>
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 #include "boxes.h"
@@ -455,6 +457,81 @@ static int check_color_support(int opt_color)
 
 
 #ifdef _WIN32
+static char *wide_to_utf8(const wchar_t *src)
+{
+    if (src == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    int len = WideCharToMultiByte(CP_UTF8, 0, src, -1, NULL, 0, NULL, NULL);
+    if (len == 0) {
+        errno = EILSEQ;
+        return NULL;
+    }
+
+    char *result = (char *) malloc((size_t) len);
+    if (result == NULL) {
+        return NULL;
+    }
+    if (WideCharToMultiByte(CP_UTF8, 0, src, -1, result, len, NULL, NULL) == 0) {
+        BFREE(result);
+        errno = EILSEQ;
+        return NULL;
+    }
+    return result;
+}
+
+
+static char **get_utf8_argv(int *argc)
+{
+    if (argc == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    int wide_argc = 0;
+    wchar_t **wide_argv = CommandLineToArgvW(GetCommandLineW(), &wide_argc);
+    if (wide_argv == NULL || wide_argc <= 0) {
+        return NULL;
+    }
+
+    char **utf8_argv = (char **) calloc((size_t) wide_argc + 1, sizeof(char *));
+    if (utf8_argv == NULL) {
+        LocalFree(wide_argv);
+        return NULL;
+    }
+
+    for (int i = 0; i < wide_argc; i++) {
+        utf8_argv[i] = wide_to_utf8(wide_argv[i]);
+        if (utf8_argv[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                BFREE(utf8_argv[j]);
+            }
+            BFREE(utf8_argv);
+            LocalFree(wide_argv);
+            return NULL;
+        }
+    }
+
+    LocalFree(wide_argv);
+    *argc = wide_argc;
+    return utf8_argv;
+}
+
+
+static void free_utf8_argv(char **argv)
+{
+    if (argv == NULL) {
+        return;
+    }
+    for (int i = 0; argv[i] != NULL; i++) {
+        BFREE(argv[i]);
+    }
+    BFREE(argv);
+}
+
+
 static const char *get_locale_from_environment()
 {
     const char *locale = getenv("LC_ALL");
@@ -544,13 +621,26 @@ int main(int argc, char *argv[])
     int rc;                           /* general return code */
     int saved_designwidth;            /* opt.design->minwith backup, used for mending */
     int saved_designheight;           /* opt.design->minheight backup, used for mending */
+    int effective_argc = argc;
+    char **effective_argv = argv;
+
+    #ifdef _WIN32
+        char **utf8_argv = get_utf8_argv(&effective_argc);
+        if (utf8_argv != NULL) {
+            effective_argv = utf8_argv;
+        }
+    #endif
 
     /* Temporarily set the system encoding, for proper output of --help text etc. */
     activateSystemEncoding();
     const char *system_encoding = get_default_encoding();
     encoding = system_encoding;
 
-    handle_command_line(argc, argv);
+    handle_command_line(effective_argc, effective_argv);
+
+    #ifdef _WIN32
+        free_utf8_argv(utf8_argv);
+    #endif
 
     /* Store system character encoding */
     encoding = check_encoding(opt.encoding, system_encoding);

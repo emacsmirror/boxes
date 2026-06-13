@@ -48,7 +48,7 @@ WIN32_CMOCKA_INCLUDE   ?= ../$(WIN_CMOCKA_DIR)/include
 WIN32_CMOCKA_LDFLAGS   ?= -L../$(WIN_CMOCKA_DIR)/lib
 WIN32_CI_PREFIX        ?= /mingw32
 
-.PHONY: clean cleanall build cov win32 win32.ci debug win32.debug win32.pcre infomsg replaceinfos test covtest \
+.PHONY: clean cleanall build cov win32 debug win32.debug win32.pcre infomsg replaceinfos test covtest \
         package win32.package package_common utest win32.utest static
 
 
@@ -241,22 +241,6 @@ win32.utest: $(OUT_DIR)
 	cp $(WIN32_CMOCKA_DLL) $(OUT_DIR)/
 	$(MAKE) -C utest BOXES_PLATFORM=win32 C_INCLUDE_PATH=$(WIN32_PCRE2_INCLUDE):$(WIN32_CMOCKA_INCLUDE) \
 	    LDFLAGS_ADDTL="$(WIN32_PCRE2_LDFLAGS) $(WIN32_CMOCKA_LDFLAGS)" utest
-
-# Mirror the Windows GitHub Actions sequence so it can be exercised locally from MSYS2. TODO clean up
-win32.ci:
-	$(MAKE) clean
-	$(MAKE) win32 \
-	    WIN32_PCRE2_INCLUDE=$(WIN32_CI_PREFIX)/include \
-	    WIN32_PCRE2_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib \
-	    WIN32_LEX=flex WIN32_YACC=bison
-	$(MAKE) win32.utest \
-	    WIN32_PCRE2_INCLUDE=$(WIN32_CI_PREFIX)/include \
-	    WIN32_PCRE2_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib \
-	    WIN32_CMOCKA_DLL=$(WIN32_CI_PREFIX)/bin/libcmocka.dll \
-	    WIN32_CMOCKA_INCLUDE=$(WIN32_CI_PREFIX)/include \
-	    WIN32_CMOCKA_LDFLAGS=-L$(WIN32_CI_PREFIX)/lib
-	TERM=$${TERM:-xterm-color} LC_CTYPE=$${LC_CTYPE:-$${LANG:-en_US.UTF-8}} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test-sunny
-	TERM=$${TERM:-xterm-color} LC_CTYPE=$${LC_CTYPE:-$${LANG:-en_US.UTF-8}} LANG=$${LANG:-en_US.UTF-8} $(MAKE) test
 
 test-sunny:
 	cd test; ./test-sunny-days-all.sh

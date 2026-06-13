@@ -123,8 +123,9 @@ static const char *extract_locale_encoding(const char *locale)
         return encoding_buffer;
     }
     if (is_all_digits(encoding_buffer)) {
-        static char codepage_buffer[32];
-        snprintf(codepage_buffer, sizeof(codepage_buffer), "CP%s", encoding_buffer);
+        static char codepage_buffer[sizeof(encoding_buffer) + 2];
+        memcpy(codepage_buffer, "CP", 2);
+        strcpy(codepage_buffer + 2, encoding_buffer);
         return codepage_buffer;
     }
     return encoding_buffer;
