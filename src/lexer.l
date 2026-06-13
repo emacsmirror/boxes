@@ -117,7 +117,7 @@ U3B       \xED[\x80-\x9F][\x80-\xBF]
 U4A       \xF0[\x90-\xBF][\x80-\xBF]{2}
 U4B       [\xF1-\xF3][\x80-\xBF]{3}
 U4C       \xF4[\x80-\x8F][\x80-\xBF]{2}
-UTF_8     {U2A}|{U2B}|{U3A}|{U3B}|{U4A}|{U4B}|{U4C}
+UTF_8     (?-i:{U2A}|{U2B}|{U3A}|{U3B}|{U4A}|{U4B}|{U4C})
 
 PWORD     (?:[a-zA-Z]|{UTF_8})(?:[a-zA-Z0-9_-]|{UTF_8})*
 PASCII_ID [a-zA-Z][a-zA-Z0-9_-]*

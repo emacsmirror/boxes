@@ -109,6 +109,9 @@ parser.c parser.h: parser.y lex.yy.h | check_dir
 # the variable lives entirely in generated code.
 parser.o: CFLAGS += -Wno-unused-but-set-variable
 
+# Flex 2.6.x emits REJECT bookkeeping that Clang warns about in generated code.
+lex.yy.o: CFLAGS += -Wno-misleading-indentation
+
 lex.yy.c lex.yy.h: lexer.l | check_dir
 	$(LEX) --header-file=lex.yy.h $<
 

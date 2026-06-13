@@ -20,6 +20,9 @@ SRC_DIR    = ../src
 UTEST_DIR  = ../utest
 VPATH      = $(SRC_DIR):$(SRC_DIR)/misc:$(UTEST_DIR)
 
+# GCC understands this suppression, while Clang warns about the flag itself.
+STRINGOP_OVERFLOW_CFLAG := $(shell $(CC) -Werror -Wno-stringop-overflow -x c -c /dev/null -o /dev/null >/dev/null 2>&1 && printf '%s' '-Wno-stringop-overflow')
+
 UTEST_NORM = global_mock.c bxstring_test.o cmdline_test.c logging_test.c tools_test.c regulex_test.o remove_test.o \
              main.o unicode_test.o utest_tools.o
 
@@ -37,7 +40,7 @@ $(OUT_DIR):
 	mkdir $(OUT_DIR)
 
 flags_unix:
-	$(eval CFLAGS := -I. -I$(SRC_DIR) -O -Wall -W -Wno-stringop-overflow $(CFLAGS_ADDTL))
+	$(eval CFLAGS := -I. -I$(SRC_DIR) -O -Wall -W $(STRINGOP_OVERFLOW_CFLAG) $(CFLAGS_ADDTL))
 	$(eval LDFLAGS := $(LDFLAGS) --coverage $(LDFLAGS_ADDTL))
 	$(eval UTEST_EXECUTABLE_NAME := unittest)
 	$(eval UTEST_OBJ := $(UTEST_NORM:.c=.o))

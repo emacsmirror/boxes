@@ -65,6 +65,7 @@ jobs:
             # We need to use GNU grep, sed, and xargs on macOS
             - name: add-packages
               run: |
+                  brew trust coverallsapp/coveralls
                   brew install flex bison diffutils lcov cmocka grep gnu-sed findutils
                   echo '/opt/homebrew/opt/grep/libexec/gnubin' >> $GITHUB_PATH
                   echo '/opt/homebrew/opt/gnu-sed/libexec/gnubin' >> $GITHUB_PATH
