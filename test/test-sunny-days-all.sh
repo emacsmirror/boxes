@@ -31,6 +31,21 @@ declare -r COVERAGE_FILE=${COVERAGE_DIR}/coverage.info
 # Command Line Options
 declare opt_coverage=false
 
+declare branchCoverage=lcov_branch_coverage
+declare -a lcovArgs=(--ignore-errors unused)
+declare -a lcovCaptureArgs=()
+declare -ar lcovCaptureRcArgs=(--rc geninfo_unexecuted_blocks=1)
+declare -ar lcovExcludeArgs=(--exclude '*/lex.yy.c' --exclude '*/parser.c' --exclude '*/lexer.l' --exclude '*/parser.y')
+
+if [[ $(uname) == "Darwin" ]]; then
+    branchCoverage=branch_coverage
+    lcovArgs+=(--rc derive_function_end_line=0)
+fi
+
+if [[ -n "${GCOV_TOOL:-}" ]]; then
+    lcovCaptureArgs+=(--gcov-tool "${GCOV_TOOL}")
+fi
+
 # Global Variables
 declare result=0
 declare success=0
@@ -90,16 +105,6 @@ function get_executable_name()
         binaryName=${OUT_DIR}/boxes
     fi
     echo $binaryName
-}
-
-
-function get_coverage_option()
-{
-    local coverageOption=lcov_branch_coverage
-    if [[ $(uname) == "Darwin" ]]; then
-        coverageOption=branch_coverage
-    fi
-    echo ${coverageOption}
 }
 
 
@@ -195,10 +200,10 @@ function measure_coverage()
         mkdir -p "${COVERAGE_DIR}"
         cp ${OUT_DIR}/*.gc* "${COVERAGE_DIR}"
         lcov --capture --directory "${COVERAGE_DIR}" --base-directory "${SRC_DIR}" --test-name SunnyDayTests \
-            --quiet --exclude '*/lex.yy.c' --exclude '*/parser.c' --rc "${branchCoverage}=1" \
-            --output-file "${COVERAGE_FILE}"
+            --quiet "${lcovCaptureArgs[@]}" "${lcovCaptureRcArgs[@]}" "${lcovExcludeArgs[@]}" "${lcovArgs[@]}" \
+            --rc "${branchCoverage}=1" --output-file "${COVERAGE_FILE}" || return 1
         echo -n "    Coverage: "
-        lcov --summary "${COVERAGE_FILE}" 2>&1 | grep 'lines...' | grep -oP '\d+\.\d*%'
+        lcov --summary "${COVERAGE_FILE}" 2>&1 | grep 'lines...' | grep -oP '\d+\.\d*%' || return 1
     fi
 }
 
@@ -209,7 +214,7 @@ function report_coverage()
         local testReportDir=${OUT_DIR}/report-sunny
         mkdir -p ${testReportDir}
         genhtml --title "Boxes / Sunny-Day Tests" --branch-coverage --legend \
-            --output-directory ${testReportDir} ${COVERAGE_FILE}
+            --output-directory ${testReportDir} ${COVERAGE_FILE} || return 1
         echo -e "\nTest coverage report available at ${testReportDir}/index.html"
     fi
 }
@@ -221,9 +226,6 @@ clear_gcda_traces
 
 declare boxesBinary
 boxesBinary=$(get_executable_name)
-
-declare branchCoverage
-branchCoverage=$(get_coverage_option)
 
 echo "Performing sunny-day tests on all box designs"
 
@@ -266,7 +268,7 @@ do
 done
 
 echo "${countExecuted} tests executed, $((countExecuted - countFailed)) successful, ${countFailed} failed."
-measure_coverage
-report_coverage
+measure_coverage || exit $?
+report_coverage || exit $?
 
 exit ${result}

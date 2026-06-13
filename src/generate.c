@@ -1087,8 +1087,11 @@ int output_box(const sentry_t *thebox)
         }
 
         bxstr_t *obuf_trimmed = bxs_rtrim(obuf);
-        fprintf(opt.outfile, "%s%s", bxs_to_output(obuf_trimmed),
-                    (input.final_newline || j < nol - skip_end - 1 ? opt.eol : ""));
+        const char *line_end = "";
+        if (input.final_newline || j < nol - skip_end - 1) {
+            line_end = opt.eol;
+        }
+        fprintf(opt.outfile, "%s%s", bxs_to_output(obuf_trimmed), line_end);
 
         bxs_free(obuf);
         bxs_free(obuf_trimmed);

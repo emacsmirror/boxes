@@ -62,11 +62,13 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
-            # We need to use GNU grep, sed, and xargs on macOS
+            # We need GNU userland tools and a real GCC/gcov pair on macOS
             - name: add-packages
               run: |
                   brew trust coverallsapp/coveralls
-                  brew install flex bison diffutils lcov cmocka grep gnu-sed findutils
+                  brew install flex bison diffutils lcov cmocka gcc grep gnu-sed findutils
+                  echo "CC=$(printf '%s\n' /opt/homebrew/bin/gcc-[0-9]* | sort -t- -k2,2n | tail -n 1)" >> "$GITHUB_ENV"
+                  echo "GCOV_TOOL=$(printf '%s\n' /opt/homebrew/bin/gcov-[0-9]* | sort -t- -k2,2n | tail -n 1)" >> "$GITHUB_ENV"
                   echo '/opt/homebrew/opt/grep/libexec/gnubin' >> $GITHUB_PATH
                   echo '/opt/homebrew/opt/gnu-sed/libexec/gnubin' >> $GITHUB_PATH
                   echo '/opt/homebrew/opt/findutils/libexec/gnubin' >> $GITHUB_PATH

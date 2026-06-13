@@ -30,6 +30,21 @@ declare opt_coverage_per_test=false
 declare opt_suite=false
 declare opt_testCase=""
 
+declare branchCoverage=lcov_branch_coverage
+declare -a lcovArgs=(--ignore-errors unused)
+declare -a lcovCaptureArgs=()
+declare -ar lcovCaptureRcArgs=(--rc geninfo_unexecuted_blocks=1)
+declare -ar lcovExcludeArgs=(--exclude '*/lex.yy.c' --exclude '*/parser.c' --exclude '*/lexer.l' --exclude '*/parser.y')
+
+if [[ $(uname) == "Darwin" ]]; then
+    branchCoverage=branch_coverage
+    lcovArgs+=(--rc derive_function_end_line=0)
+fi
+
+if [[ -n "${GCOV_TOOL:-}" ]]; then
+    lcovCaptureArgs+=(--gcov-tool "${GCOV_TOOL}")
+fi
+
 
 function print_usage()
 {
@@ -111,7 +126,8 @@ function cov_baseline()
         if [ ! -f ${BASELINE_FILE} ]; then
             echo "Creating coverage baseline ..."
             lcov --capture --initial --no-recursion --directory ${OUT_DIR} --base-directory ${SRC_DIR} \
-                --exclude '*/lex.yy.c' --exclude '*/parser.c' --output-file ${BASELINE_FILE}
+                "${lcovCaptureArgs[@]}" "${lcovCaptureRcArgs[@]}" "${lcovExcludeArgs[@]}" "${lcovArgs[@]}" \
+                --rc "${branchCoverage}=1" --output-file ${BASELINE_FILE} || return 1
             echo -e "Coverage baseline created in ${BASELINE_FILE}\n"
         fi
     fi
@@ -160,10 +176,10 @@ function measure_coverage()
         mkdir -p "${testResultsDir}"
         cp ${OUT_DIR}/*.gc* "${testResultsDir}"
         lcov --capture --directory "${testResultsDir}" --base-directory ${SRC_DIR} --test-name "${tcBaseName}" --quiet \
-            --exclude '*/lex.yy.c' --exclude '*/parser.c' --rc "${branchCoverage}=1" \
-            --output-file "${testResultsDir}/coverage.info"
+            "${lcovCaptureArgs[@]}" "${lcovCaptureRcArgs[@]}" "${lcovExcludeArgs[@]}" "${lcovArgs[@]}" \
+            --rc "${branchCoverage}=1" --output-file "${testResultsDir}/coverage.info" || return 1
         echo -n "    Coverage: "
-        lcov --summary "${testResultsDir}/coverage.info" 2>&1 | grep 'lines...' | grep -oP '\d+\.\d*%'
+        lcov --summary "${testResultsDir}/coverage.info" 2>&1 | grep 'lines...' | grep -oP '\d+\.\d*%' || return 1
     fi
 }
 
@@ -171,12 +187,17 @@ function measure_coverage()
 function consolidate_coverage()
 {
     if [[ ${opt_coverage} == true ]]; then
+        local status=0
+
         echo -e "\nConsolidating test coverage ..."
         pushd ${OUT_DIR}/test-results || exit 1
         find . -name "*.info" | xargs printf -- '--add-tracefile %s\n' | xargs --exit \
-            lcov --rc "${branchCoverage}=1" --exclude '*/lex.yy.c' --exclude '*/parser.c' \
-                --output-file ../${COVERAGE_FILE} --add-tracefile ../${BASELINE_FILE}
+            lcov --rc "${branchCoverage}=1" "${lcovExcludeArgs[@]}" "${lcovArgs[@]}" \
+                --output-file ../${COVERAGE_FILE} --add-tracefile ../${BASELINE_FILE} || status=$?
         popd || exit 1
+        if [ ${status} -ne 0 ]; then
+            return ${status}
+        fi
         echo ""
     fi
 }
@@ -187,7 +208,7 @@ function report_coverage()
     local testReportDir=${OUT_DIR}/report
     mkdir -p ${testReportDir}
     genhtml --title "Boxes / All Tests" --branch-coverage --legend \
-        --output-directory ${testReportDir} ${COVERAGE_FILE}
+        --output-directory ${testReportDir} ${COVERAGE_FILE} || return 1
     echo -e "\nTest coverage report available at ${testReportDir}/index.html"
 }
 
@@ -302,13 +323,9 @@ function assert_outcome()
 
 parse_arguments "$@"
 check_prereqs
-cov_baseline
+cov_baseline || exit $?
 
 declare tcBaseName=${opt_testCase%.txt}
-declare branchCoverage=lcov_branch_coverage
-if [[ $(uname) == "Darwin" ]]; then
-    branchCoverage=branch_coverage
-fi
 
 # Execute the entire test suite
 if [ ${opt_suite} == true ]; then
@@ -317,12 +334,15 @@ if [ ${opt_suite} == true ]; then
     execute_suite
 
     if [ ${opt_coverage_per_test} == false ]; then
-        tcBaseName=black-box-all
-        measure_coverage
+        tcBaseName=black_box_all
+        if ! measure_coverage; then
+            overallResult=1
+        fi
     fi
     if [ ${opt_coverage} == true ]; then
-        consolidate_coverage
-        report_coverage
+        if ! consolidate_coverage || ! report_coverage; then
+            overallResult=1
+        fi
     fi
     exit ${overallResult}
 fi
@@ -352,7 +372,7 @@ declare -i actualReturnCode=100
 run_boxes
 
 if [ ${opt_coverage_per_test} == true ]; then
-    measure_coverage
+    measure_coverage || exit $?
 fi
 assert_outcome
 

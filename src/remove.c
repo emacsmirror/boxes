@@ -331,9 +331,15 @@ int hmm(shape_line_ctx_t *shapes_relevant, uint32_t *cur_pos, size_t shape_idx, 
     }
     else if (cur_pos == end_pos) {
         /* we are at the end, which is fine if there is nothing else to match */
-        result = (shape_idx == (SHAPES_PER_SIDE - 1) && anchored_right)
-                || ((shapes_relevant[shape_idx].empty || bxs_is_blank(shapes_relevant[shape_idx].text))
-                    && !non_empty_shapes_after(shapes_relevant, shape_idx) ? 1 : 0);
+        if (shape_idx == (SHAPES_PER_SIDE - 1) && anchored_right) {
+            result = 1;
+        }
+        else if (shapes_relevant[shape_idx].empty || bxs_is_blank(shapes_relevant[shape_idx].text)) {
+            result = !non_empty_shapes_after(shapes_relevant, shape_idx);
+        }
+        else {
+            result = 0;
+        }
     }
     else if (shape_idx >= SHAPES_PER_SIDE - 1) {
         /* no more shapes to try, which is fine if the rest of the line is blank */
