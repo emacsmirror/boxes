@@ -28,7 +28,7 @@ OUT_DIR    = out
 BX_LEX  ?= flex
 BX_YACC ?= bison
 
-PCRE2_VERSION          = 10.40
+PCRE2_VERSION          = 10.47
 PCRE2_DIR              = vendor/pcre2-$(PCRE2_VERSION)
 WIN32_PCRE2_INCLUDE    ?= ../$(PCRE2_DIR)/src
 WIN32_PCRE2_LDFLAGS    ?= -L../$(PCRE2_DIR)/.libs
