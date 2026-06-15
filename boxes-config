@@ -1525,7 +1525,7 @@ BOX boxquote
 
 author   "Christian Molls <CMolls@gmx.net>"
 designer "Christian Molls <CMolls@gmx.net>"
-tags     ("simple", "artwork")
+tags     ("simple")
 
 sample
     ,----[ mp3-wav ]
@@ -1594,7 +1594,7 @@ BOX stone
 
 author   "Fredrik Steen <fsteen@stone.nu>"
 designer "Fredrik Steen <fsteen@stone.nu>"
-tags     ("simple", "artwork", "box")
+tags     ("simple", "box")
 
 sample
     +-------------+
@@ -1965,7 +1965,7 @@ BOX caml
 
 author   "Michael Tiernan <Michael.Tiernan@gMail.com>"
 designer "Michael Tiernan <Michael.Tiernan@gMail.com>"
-tags     ("simple", "artwork", "box")
+tags     ("comment", "programming", "simple", "box")
 
 sample
     (*************)
